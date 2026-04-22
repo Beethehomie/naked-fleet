@@ -1,8 +1,8 @@
 "use client"
 import TopBar from "@/components/layout/TopBar"
 import {
-  Car, CalendarCheck, Users, TrendingUp, TrendingDown,
-  AlertTriangle, Clock, DollarSign, CheckCircle, XCircle,
+  Car, CalendarCheck, AlertTriangle, Clock,
+  DollarSign, CheckCircle, XCircle, TrendingUp, TrendingDown,
 } from "lucide-react"
 import { formatCurrency } from "@/lib/utils"
 import {
@@ -10,7 +10,7 @@ import {
   ResponsiveContainer, PieChart, Pie, Cell,
 } from "recharts"
 
-// ── Mock data (replace with real API calls) ────────────────────
+// ── Mock data ──────────────────────────────────────────────────
 const revenueData = [
   { month: "Nov", revenue: 42000 },
   { month: "Dec", revenue: 58000 },
@@ -21,18 +21,18 @@ const revenueData = [
 ]
 
 const fleetData = [
-  { name: "Available",  value: 14, color: "#00E676" },
-  { name: "Rented",     value: 8,  color: "#2979FF" },
-  { name: "Maintenance",value: 3,  color: "#FFB300" },
-  { name: "Reserved",   value: 2,  color: "#A0A0A0" },
+  { name: "Available",   value: 14, color: "#34D399" },
+  { name: "Rented",      value: 8,  color: "#5B9BF8" },
+  { name: "Maintenance", value: 3,  color: "#FBBF24" },
+  { name: "Reserved",    value: 2,  color: "#8899B4" },
 ]
 
 const recentBookings = [
-  { ref: "BK-2026-00041", customer: "James Mokoena",   vehicle: "Toyota Camry",   start: "21 Apr", end: "24 Apr", status: "ACTIVE" },
-  { ref: "BK-2026-00040", customer: "Thandi Nkosi",    vehicle: "BMW 3 Series",   start: "20 Apr", end: "23 Apr", status: "CONFIRMED" },
-  { ref: "BK-2026-00039", customer: "Sipho Dlamini",   vehicle: "Mercedes C-Class",start:"18 Apr", end: "21 Apr", status: "COMPLETED" },
-  { ref: "BK-2026-00038", customer: "Lerato Molefe",   vehicle: "Range Rover",    start: "17 Apr", end: "20 Apr", status: "COMPLETED" },
-  { ref: "BK-2026-00037", customer: "Andile Zulu",     vehicle: "Audi A4",        start: "15 Apr", end: "18 Apr", status: "COMPLETED" },
+  { ref: "BK-2026-00041", customer: "James Mokoena",    vehicle: "Toyota Camry",    start: "21 Apr", end: "24 Apr", status: "ACTIVE" },
+  { ref: "BK-2026-00040", customer: "Thandi Nkosi",     vehicle: "BMW 3 Series",    start: "20 Apr", end: "23 Apr", status: "CONFIRMED" },
+  { ref: "BK-2026-00039", customer: "Sipho Dlamini",    vehicle: "Mercedes C-Class",start: "18 Apr", end: "21 Apr", status: "COMPLETED" },
+  { ref: "BK-2026-00038", customer: "Lerato Molefe",    vehicle: "Range Rover",     start: "17 Apr", end: "20 Apr", status: "COMPLETED" },
+  { ref: "BK-2026-00037", customer: "Andile Zulu",      vehicle: "Audi A4",         start: "15 Apr", end: "18 Apr", status: "COMPLETED" },
 ]
 
 const statusBadge: Record<string, string> = {
@@ -46,9 +46,17 @@ const statusBadge: Record<string, string> = {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null
   return (
-    <div className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg px-4 py-2.5 text-sm shadow-xl">
-      <p className="text-[#A0A0A0] mb-1">{label}</p>
-      <p className="text-[#00E676] font-bold">{formatCurrency(payload[0].value)}</p>
+    <div
+      className="rounded-xl px-4 py-2.5 text-sm shadow-xl border"
+      style={{
+        backgroundColor: "var(--color-card)",
+        borderColor: "var(--color-line)",
+      }}
+    >
+      <p className="text-xs mb-1" style={{ color: "var(--color-text-secondary)" }}>{label}</p>
+      <p className="font-bold" style={{ color: "var(--color-text-accent)" }}>
+        {formatCurrency(payload[0].value)}
+      </p>
     </div>
   )
 }
@@ -61,7 +69,7 @@ export default function DashboardPage() {
     <div className="flex flex-col min-h-screen">
       <TopBar title="Dashboard" subtitle="Welcome back — here's what's happening today" />
 
-      <div className="p-6 space-y-6 animate-[fade-in_0.3s_ease-out]">
+      <div className="max-w-7xl mx-auto w-full px-6 py-8 space-y-6">
 
         {/* ── KPI Row ─────────────────────────────────────────── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -72,7 +80,7 @@ export default function DashboardPage() {
               change: "+21.9%",
               up: true,
               icon: DollarSign,
-              color: "#00E676",
+              accent: "var(--color-positive)",
             },
             {
               label: "Active Bookings",
@@ -80,7 +88,7 @@ export default function DashboardPage() {
               change: "+2 today",
               up: true,
               icon: CalendarCheck,
-              color: "#2979FF",
+              accent: "#5B9BF8",
             },
             {
               label: "Fleet Utilisation",
@@ -88,7 +96,7 @@ export default function DashboardPage() {
               change: "+5% vs last month",
               up: true,
               icon: Car,
-              color: "#00E676",
+              accent: "var(--color-positive)",
             },
             {
               label: "Held Deposits",
@@ -96,26 +104,35 @@ export default function DashboardPage() {
               change: "3 unresolved",
               up: false,
               icon: AlertTriangle,
-              color: "#FFB300",
+              accent: "var(--color-warning)",
             },
-          ].map(({ label, value, change, up, icon: Icon, color }) => (
-            <div key={label} className="stat-card group hover:border-[#3A3A3A] transition-colors">
+          ].map(({ label, value, change, up, icon: Icon, accent }) => (
+            <div
+              key={label}
+              className="stat-card"
+              style={{ borderLeftColor: accent }}
+            >
               <div className="flex items-start justify-between">
                 <div>
                   <p className="stat-label">{label}</p>
                   <p className="stat-value mt-1">{value}</p>
                 </div>
-                <div className="p-2 rounded-lg" style={{ background: `${color}15` }}>
-                  <Icon className="w-5 h-5" style={{ color }} />
+                <div
+                  className="p-2 rounded-lg flex-shrink-0"
+                  style={{ backgroundColor: `${accent}18` }}
+                >
+                  <Icon className="w-5 h-5" style={{ color: accent }} />
                 </div>
               </div>
               <div className="flex items-center gap-1">
-                {up ? (
-                  <TrendingUp className="w-3.5 h-3.5 text-[#00E676]" />
-                ) : (
-                  <TrendingDown className="w-3.5 h-3.5 text-yellow-400" />
-                )}
-                <span className={`text-xs font-medium ${up ? "text-[#00E676]" : "text-yellow-400"}`}>
+                {up
+                  ? <TrendingUp className="w-3.5 h-3.5" style={{ color: "var(--color-positive)" }} />
+                  : <TrendingDown className="w-3.5 h-3.5" style={{ color: "var(--color-warning)" }} />
+                }
+                <span
+                  className="text-xs font-medium"
+                  style={{ color: up ? "var(--color-positive)" : "var(--color-warning)" }}
+                >
                   {change}
                 </span>
               </div>
@@ -124,29 +141,47 @@ export default function DashboardPage() {
         </div>
 
         {/* ── Charts row ──────────────────────────────────────── */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-6">
           {/* Revenue chart */}
           <div className="col-span-2 card">
             <div className="flex items-center justify-between mb-5">
               <div>
-                <h3 className="text-white font-semibold">Revenue Trend</h3>
-                <p className="text-[#606060] text-xs mt-0.5">Last 6 months</p>
+                <h3 className="section-heading">Revenue Trend</h3>
+                <p className="text-xs mt-0.5" style={{ color: "var(--color-text-secondary)" }}>
+                  Last 6 months
+                </p>
               </div>
               <span className="badge-green">+21.9% MoM</span>
             </div>
             <ResponsiveContainer width="100%" height={200}>
               <AreaChart data={revenueData}>
                 <defs>
-                  <linearGradient id="greenGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%"  stopColor="#00E676" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="#00E676" stopOpacity={0} />
+                  <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%"  stopColor="#5B9BF8" stopOpacity={0.25} />
+                    <stop offset="95%" stopColor="#5B9BF8" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1A1A1A" />
-                <XAxis dataKey="month" tick={{ fill: "#606060", fontSize: 12 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: "#606060", fontSize: 12 }} axisLine={false} tickLine={false} tickFormatter={v => `R${v/1000}k`} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-line)" />
+                <XAxis
+                  dataKey="month"
+                  tick={{ fill: "var(--color-text-secondary)", fontSize: 12 }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fill: "var(--color-text-secondary)", fontSize: 12 }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={v => `R${v / 1000}k`}
+                />
                 <Tooltip content={<CustomTooltip />} />
-                <Area type="monotone" dataKey="revenue" stroke="#00E676" strokeWidth={2} fill="url(#greenGrad)" />
+                <Area
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="#5B9BF8"
+                  strokeWidth={2}
+                  fill="url(#areaGrad)"
+                />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -154,32 +189,44 @@ export default function DashboardPage() {
           {/* Fleet donut */}
           <div className="card flex flex-col">
             <div className="mb-4">
-              <h3 className="text-white font-semibold">Fleet Status</h3>
-              <p className="text-[#606060] text-xs mt-0.5">{totalFleet} vehicles total</p>
+              <h3 className="section-heading">Fleet Status</h3>
+              <p className="text-xs mt-0.5" style={{ color: "var(--color-text-secondary)" }}>
+                {totalFleet} vehicles total
+              </p>
             </div>
             <div className="flex-1 flex items-center justify-center relative">
               <ResponsiveContainer width="100%" height={160}>
                 <PieChart>
-                  <Pie data={fleetData} cx="50%" cy="50%" innerRadius={50} outerRadius={70} paddingAngle={3} dataKey="value">
+                  <Pie
+                    data={fleetData}
+                    cx="50%" cy="50%"
+                    innerRadius={50} outerRadius={70}
+                    paddingAngle={3}
+                    dataKey="value"
+                  >
                     {fleetData.map((entry, i) => (
                       <Cell key={i} fill={entry.color} strokeWidth={0} />
                     ))}
                   </Pie>
                 </PieChart>
               </ResponsiveContainer>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <p className="text-2xl font-bold text-white">{utilisation}%</p>
-                <p className="text-[#606060] text-xs">utilised</p>
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <p className="text-2xl font-bold" style={{ color: "var(--color-text-primary)" }}>
+                  {utilisation}%
+                </p>
+                <p className="text-xs" style={{ color: "var(--color-text-secondary)" }}>utilised</p>
               </div>
             </div>
             <div className="space-y-2 mt-2">
               {fleetData.map(d => (
                 <div key={d.name} className="flex items-center justify-between text-xs">
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full" style={{ background: d.color }} />
-                    <span className="text-[#A0A0A0]">{d.name}</span>
+                    <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: d.color }} />
+                    <span style={{ color: "var(--color-text-secondary)" }}>{d.name}</span>
                   </div>
-                  <span className="text-white font-medium">{d.value}</span>
+                  <span className="font-semibold" style={{ color: "var(--color-text-primary)" }}>
+                    {d.value}
+                  </span>
                 </div>
               ))}
             </div>
@@ -187,54 +234,83 @@ export default function DashboardPage() {
         </div>
 
         {/* ── Bottom row ──────────────────────────────────────── */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-6">
           {/* Recent bookings */}
-          <div className="col-span-2 card">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-white font-semibold">Recent Bookings</h3>
-              <a href="/bookings" className="text-[#00E676] text-xs hover:underline">View all →</a>
+          <div className="col-span-2 card p-0 overflow-hidden">
+            <div
+              className="flex items-center justify-between px-5 py-4 border-b"
+              style={{ borderColor: "var(--color-line)" }}
+            >
+              <h3 className="section-heading">Recent Bookings</h3>
+              <a
+                href="/bookings"
+                className="text-xs hover:underline"
+                style={{ color: "var(--color-text-accent)" }}
+              >
+                View all →
+              </a>
             </div>
-            <table className="table-base">
-              <thead>
-                <tr>
-                  <th>Ref</th>
-                  <th>Customer</th>
-                  <th>Vehicle</th>
-                  <th>Dates</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentBookings.map(b => (
-                  <tr key={b.ref}>
-                    <td className="font-mono text-[#00E676] text-xs">{b.ref}</td>
-                    <td>{b.customer}</td>
-                    <td className="text-[#A0A0A0]">{b.vehicle}</td>
-                    <td className="text-[#A0A0A0] text-xs">{b.start} → {b.end}</td>
-                    <td><span className={statusBadge[b.status] ?? "badge-muted"}>{b.status}</span></td>
+            <div className="overflow-x-auto">
+              <table className="table-base">
+                <thead>
+                  <tr>
+                    <th>Ref</th>
+                    <th>Customer</th>
+                    <th>Vehicle</th>
+                    <th>Dates</th>
+                    <th>Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {recentBookings.map(b => (
+                    <tr key={b.ref} className="clickable">
+                      <td className="font-mono text-xs" style={{ color: "var(--color-text-accent)" }}>
+                        {b.ref}
+                      </td>
+                      <td style={{ color: "var(--color-text-primary)" }}>{b.customer}</td>
+                      <td>{b.vehicle}</td>
+                      <td className="text-xs">{b.start} → {b.end}</td>
+                      <td>
+                        <span className={statusBadge[b.status] ?? "badge-muted"}>{b.status}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
 
           {/* Alerts */}
           <div className="card flex flex-col gap-3">
-            <h3 className="text-white font-semibold">Alerts</h3>
+            <h3 className="section-heading">Alerts</h3>
             {[
-              { icon: AlertTriangle, color: "text-yellow-400", bg: "bg-yellow-500/10", msg: "2 vehicles compliance expiring in 7 days", time: "Today" },
-              { icon: Clock,         color: "text-red-400",    bg: "bg-red-500/10",    msg: "BK-2026-00035 overdue by 2 days",         time: "2d ago" },
-              { icon: DollarSign,    color: "text-blue-400",   bg: "bg-blue-500/10",   msg: "3 deposits pending resolution",            time: "Today" },
-              { icon: CheckCircle,   color: "text-[#00E676]",  bg: "bg-[#00E676]/10",  msg: "Monthly supplier fees due today",          time: "1h ago" },
-              { icon: XCircle,       color: "text-red-400",    bg: "bg-red-500/10",    msg: "Insurance policy expiring — VW Polo",     time: "3d ago" },
+              { icon: AlertTriangle, color: "var(--color-warning)",  bg: "rgba(251,191,36,0.1)",   msg: "2 vehicles compliance expiring in 7 days", time: "Today" },
+              { icon: Clock,         color: "var(--color-negative)", bg: "rgba(248,113,113,0.1)",  msg: "BK-2026-00035 overdue by 2 days",         time: "2d ago" },
+              { icon: DollarSign,    color: "#5B9BF8",               bg: "rgba(91,155,248,0.1)",   msg: "3 deposits pending resolution",            time: "Today" },
+              { icon: CheckCircle,   color: "var(--color-positive)", bg: "rgba(52,211,153,0.1)",   msg: "Monthly supplier fees due today",          time: "1h ago" },
+              { icon: XCircle,       color: "var(--color-negative)", bg: "rgba(248,113,113,0.1)",  msg: "Insurance policy expiring — VW Polo",     time: "3d ago" },
             ].map(({ icon: Icon, color, bg, msg, time }, i) => (
-              <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-[#1A1A1A] border border-[#2A2A2A] hover:border-[#3A3A3A] transition-colors cursor-pointer">
-                <div className={`p-1.5 rounded-lg ${bg} flex-shrink-0`}>
-                  <Icon className={`w-3.5 h-3.5 ${color}`} />
+              <div
+                key={i}
+                className="flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors"
+                style={{
+                  backgroundColor: "var(--color-cp-muted)",
+                  borderColor: "var(--color-line)",
+                }}
+              >
+                <div
+                  className="p-1.5 rounded-lg flex-shrink-0"
+                  style={{ backgroundColor: bg }}
+                >
+                  <Icon className="w-3.5 h-3.5" style={{ color }} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-white text-xs leading-snug">{msg}</p>
-                  <p className="text-[#606060] text-xs mt-1">{time}</p>
+                  <p className="text-xs leading-snug" style={{ color: "var(--color-text-primary)" }}>
+                    {msg}
+                  </p>
+                  <p className="text-xs mt-1" style={{ color: "var(--color-text-secondary)" }}>
+                    {time}
+                  </p>
                 </div>
               </div>
             ))}

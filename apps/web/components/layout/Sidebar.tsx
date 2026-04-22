@@ -23,16 +23,19 @@ export default function Sidebar() {
   const path = usePathname()
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-60 bg-[#0A0A0A] border-r border-[#2A2A2A] flex flex-col z-40">
+    <aside
+      className="fixed left-0 top-0 h-screen w-60 flex flex-col z-40"
+      style={{ backgroundColor: "var(--color-cp)" }}
+    >
       {/* Logo */}
-      <div className="px-5 py-6 border-b border-[#2A2A2A]">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-[#00E676] flex items-center justify-center">
-            <Car className="w-4 h-4 text-black" strokeWidth={2.5} />
+      <div className="px-5 py-5 border-b border-white/10">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center">
+            <Car className="w-4 h-4 text-white" strokeWidth={2.5} />
           </div>
           <div>
-            <p className="text-white font-bold text-sm leading-none">NAKED</p>
-            <p className="text-[#00E676] font-bold text-sm leading-none tracking-widest">FLEET</p>
+            <p className="text-white font-bold text-sm tracking-tight leading-none">Naked Fleet</p>
+            <p className="text-white/50 text-xs leading-none mt-0.5">Fleet Management OS</p>
           </div>
         </div>
       </div>
@@ -40,29 +43,40 @@ export default function Sidebar() {
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
         {NAV.map(({ label, href, icon: Icon }) => {
-          const active = path.startsWith(href)
+          const active = path === href || path.startsWith(href + "/")
           return (
-            <Link key={href} href={href} className={cn(active ? "nav-item-active" : "nav-item")}>
+            <Link
+              key={href}
+              href={href}
+              className={cn(
+                "nav-item",
+                active && "nav-item-active"
+              )}
+            >
               <Icon className="w-4 h-4 flex-shrink-0" />
               <span>{label}</span>
-              {active && <div className="ml-auto w-1 h-4 rounded-full bg-[#00E676]" />}
+              {active && (
+                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white" />
+              )}
             </Link>
           )
         })}
       </nav>
 
       {/* Bottom */}
-      <div className="px-3 pb-4 pt-2 border-t border-[#2A2A2A] space-y-0.5">
+      <div className="px-3 pb-4 pt-2 border-t border-white/10 space-y-0.5">
         <Link href="/settings" className="nav-item">
           <Settings className="w-4 h-4" />
           <span>Settings</span>
         </Link>
         <button
           onClick={() => {
-            localStorage.clear()
-            window.location.href = "/login"
+            if (typeof window !== "undefined") {
+              localStorage.clear()
+              window.location.href = "/login"
+            }
           }}
-          className="nav-item w-full text-left hover:text-red-400 hover:bg-red-500/5"
+          className="nav-item w-full text-left hover:!text-red-300 hover:!bg-red-500/10"
         >
           <LogOut className="w-4 h-4" />
           <span>Sign Out</span>

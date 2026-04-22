@@ -1,6 +1,7 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  darkMode: "class",
   content: [
     "./pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -9,62 +10,51 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Naked Fleet Design System
-        black:    "#000000",
-        rich:     "#0A0A0A",
-        surface:  "#111111",
-        elevated: "#1A1A1A",
-        border:   "#2A2A2A",
-        muted:    "#3A3A3A",
-        green: {
-          DEFAULT: "#00E676",
-          dim:     "#00C853",
-          dark:    "#007A3D",
-          glow:    "rgba(0,230,118,0.15)",
+        // Brand palette — light / dark via CSS variables
+        cp: {
+          DEFAULT: "var(--color-cp)",
+          light:   "var(--color-cp-light)",
+          muted:   "var(--color-cp-muted)",
         },
-        text: {
-          primary:   "#FFFFFF",
-          secondary: "#A0A0A0",
-          muted:     "#606060",
-        },
-        status: {
-          success: "#00E676",
-          warning: "#FFB300",
-          danger:  "#FF1744",
-          info:    "#2979FF",
-        },
+        // Surfaces
+        page:  "var(--color-page)",
+        card:  "var(--color-card)",
+        input: "var(--color-input)",
+        // Borders
+        line:  "var(--color-line)",
+        // Text
+        primary:   "var(--color-text-primary)",
+        secondary: "var(--color-text-secondary)",
+        accent:    "var(--color-text-accent)",
+        placeholder: "var(--color-placeholder)",
       },
       fontFamily: {
-        sans: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
-        mono: ["var(--font-geist-mono)", "monospace"],
+        sans: [
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "SF Pro Text",
+          "Segoe UI",
+          "Helvetica Neue",
+          "Arial",
+          "sans-serif",
+        ],
+        mono: [
+          "SF Mono",
+          "JetBrains Mono",
+          "Fira Code",
+          "Menlo",
+          "Monaco",
+          "Consolas",
+          "monospace",
+        ],
       },
-      backgroundImage: {
-        "green-glow": "radial-gradient(circle at 50% 0%, rgba(0,230,118,0.08) 0%, transparent 60%)",
+      borderRadius: {
+        card: "14px",
       },
       boxShadow: {
-        "green-sm":  "0 0 12px rgba(0,230,118,0.2)",
-        "green-md":  "0 0 24px rgba(0,230,118,0.25)",
-        "green-lg":  "0 0 48px rgba(0,230,118,0.3)",
-        "card":      "0 1px 3px rgba(0,0,0,0.8), 0 1px 2px rgba(0,0,0,0.6)",
-      },
-      animation: {
-        "pulse-green": "pulse-green 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
-        "fade-in":     "fade-in 0.3s ease-out",
-        "slide-in":    "slide-in 0.3s ease-out",
-      },
-      keyframes: {
-        "pulse-green": {
-          "0%, 100%": { opacity: "1" },
-          "50%":       { opacity: "0.5" },
-        },
-        "fade-in": {
-          "0%":   { opacity: "0", transform: "translateY(4px)" },
-          "100%": { opacity: "1", transform: "translateY(0)" },
-        },
-        "slide-in": {
-          "0%":   { opacity: "0", transform: "translateX(-8px)" },
-          "100%": { opacity: "1", transform: "translateX(0)" },
-        },
+        card:     "0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)",
+        "card-dark": "0 2px 10px rgba(0,0,0,0.6)",
+        modal:    "0 20px 60px rgba(0,0,0,0.4)",
       },
     },
   },
