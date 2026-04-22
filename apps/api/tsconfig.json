@@ -15,7 +15,7 @@
     "sourceMap":        false,
     "noUnusedLocals":   false,
     "noUnusedParameters": false,
-    "noImplicitReturns": true,
+    "noImplicitReturns": false,
     "noFallthroughCasesInSwitch": true,
     "moduleResolution": "node",
     "baseUrl":          ".",

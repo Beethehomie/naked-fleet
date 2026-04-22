@@ -5,6 +5,7 @@
 // ============================================================
 
 import { prisma } from '../../config/database'
+import { type RefundStatus } from '@prisma/client'
 import { NotFoundError } from '../../shared/errors'
 
 export const refundService = {
@@ -54,7 +55,7 @@ export const refundService = {
 
     const where = {
       deletedAt: null,
-      ...(status ? { status } : {}),
+      ...(status ? { status: status as RefundStatus } : {}),
       ...(from || to
         ? { createdAt: { ...(from ? { gte: from } : {}), ...(to ? { lte: to } : {}) } }
         : {}

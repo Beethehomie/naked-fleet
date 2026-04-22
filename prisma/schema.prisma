@@ -418,6 +418,7 @@ model Booking {
   deposit     Deposit?
   contract    Contract?
   inspections Inspection[]
+  claims      Claim[]
 
   @@index([customerId])
   @@index([vehicleId])
@@ -623,6 +624,7 @@ model Claim {
   vehicleId         String
   vehicle           Vehicle          @relation(fields: [vehicleId], references: [id])
   bookingId         String?          // Optional — theft may have no booking
+  booking           Booking?         @relation(fields: [bookingId], references: [id])
   insurancePolicyId String?
   insurancePolicy   InsurancePolicy? @relation(fields: [insurancePolicyId], references: [id])
   type              ClaimType

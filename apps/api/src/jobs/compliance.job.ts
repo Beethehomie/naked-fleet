@@ -48,7 +48,7 @@ export async function runComplianceExpiryJob(): Promise<void> {
       complianceItems: { where: { deletedAt: null } },
       insurancePolicies: {
         where:  { isActive: true, deletedAt: null },
-        select: { id: true, expiryDate: true },
+        select: { id: true, endDate: true },
         take: 1,
       },
     },
@@ -61,12 +61,12 @@ export async function runComplianceExpiryJob(): Promise<void> {
     const itemsToCheck: Array<{ type: string; expiryDate: Date | null }> = [
       // Structured compliance items (VEHICLE_LICENCE, ROADWORTHY, etc.)
       ...vehicle.complianceItems.map(ci => ({
-        type:       ci.itemType,
+        type:       ci.type,
         expiryDate: ci.expiryDate,
       })),
       // Active insurance policy expiry
       ...(vehicle.insurancePolicies[0]
-        ? [{ type: 'INSURANCE_POLICY', expiryDate: vehicle.insurancePolicies[0].expiryDate }]
+        ? [{ type: 'INSURANCE_POLICY', expiryDate: vehicle.insurancePolicies[0].endDate }]
         : []),
     ]
 
@@ -81,7 +81,7 @@ export async function runComplianceExpiryJob(): Promise<void> {
 
       const alert: ComplianceAlert = {
         vehicleId:    vehicle.id,
-        registration: vehicle.registration,
+        registration: vehicle.registrationNo,
         make:         vehicle.make,
         model:        vehicle.model,
         itemType:     item.type,

@@ -36,7 +36,7 @@ export async function runUnresolvedDepositJob(): Promise<void> {
       booking: {
         include: {
           customer:  { select: { firstName: true, lastName: true, email: true, phone: true } },
-          vehicle:   { select: { registration: true, make: true, model: true } },
+          vehicle:   { select: { registrationNo: true, make: true, model: true } },
           location:  { select: { id: true, name: true } },
         },
       },
@@ -98,9 +98,9 @@ export async function runUnresolvedDepositJob(): Promise<void> {
 
       return `
         <tr>
-          <td>${b.ref}</td>
+          <td>${b.bookingRef}</td>
           <td>${b.customer.firstName} ${b.customer.lastName}</td>
-          <td>${b.vehicle.registration} — ${b.vehicle.make} ${b.vehicle.model}</td>
+          <td>${b.vehicle.registrationNo} — ${b.vehicle.make} ${b.vehicle.model}</td>
           <td>${b.endDate.toISOString().split('T')[0]}</td>
           <td><span class="badge badge-red">${daysSince}d overdue</span></td>
           <td><strong>R ${Number(deposit.amount).toFixed(2)}</strong></td>

@@ -27,17 +27,23 @@ export async function runMonthlySupplierFeeReminderJob(): Promise<void> {
 
   const activeContracts = await prisma.supplierContract.findMany({
     where: {
-      status:    'ACTIVE',
+      isActive:  true,
       deletedAt: null,
     },
     include: {
       supplier: { select: { id: true, name: true, email: true } },
-      vehicle:  { select: { registration: true, make: true, model: true } },
-      location: { select: { id: true, name: true } },
+      vehicle:  {
+        select: {
+          registrationNo: true,
+          make:           true,
+          model:          true,
+          locationId:     true,
+          location:       { select: { id: true, name: true } },
+        },
+      },
     },
     orderBy: [
-      { locationId: 'asc' },
-      { supplier:   { name: 'asc' } },
+      { supplier: { name: 'asc' } },
     ],
   })
 
@@ -46,20 +52,26 @@ export async function runMonthlySupplierFeeReminderJob(): Promise<void> {
     return
   }
 
-  // Group by location
+  // Group by location (sourced from vehicle)
   const locationMap = new Map<string, typeof activeContracts>()
 
   for (const contract of activeContracts) {
-    const locId = contract.locationId
+    const locId = contract.vehicle?.locationId
+    if (!locId) continue
     if (!locationMap.has(locId)) locationMap.set(locId, [])
     locationMap.get(locId)!.push(contract)
+  }
+
+  if (locationMap.size === 0) {
+    logger.info('[suppliers.job] No contracts with associated vehicles')
+    return
   }
 
   const now = new Date()
   const monthLabel = now.toLocaleDateString('en-ZA', { month: 'long', year: 'numeric' })
 
   for (const [locationId, contracts] of locationMap.entries()) {
-    const locationName = contracts[0].location.name
+    const locationName = contracts[0].vehicle?.location?.name ?? locationId
 
     const users = await prisma.user.findMany({
       where: {
@@ -97,11 +109,15 @@ export async function runMonthlySupplierFeeReminderJob(): Promise<void> {
         ? contract.endDate.toISOString().split('T')[0]
         : 'Open-ended'
 
+      const vehicleDesc = contract.vehicle
+        ? `${contract.vehicle.registrationNo} — ${contract.vehicle.make} ${contract.vehicle.model}`
+        : 'Unassigned'
+
       return `
         <tr>
-          <td>${contract.ref}</td>
+          <td>${contract.id.slice(-8).toUpperCase()}</td>
           <td>${contract.supplier.name}</td>
-          <td>${contract.vehicle.registration} — ${contract.vehicle.make} ${contract.vehicle.model}</td>
+          <td>${vehicleDesc}</td>
           <td><strong>${monthlyFee}</strong></td>
           <td>${contractExpiry}</td>
         </tr>`
@@ -124,7 +140,7 @@ export async function runMonthlySupplierFeeReminderJob(): Promise<void> {
       <table>
         <thead>
           <tr>
-            <th>Contract Ref</th>
+            <th>Contract ID</th>
             <th>Supplier</th>
             <th>Vehicle</th>
             <th>Monthly Fee</th>
@@ -164,14 +180,21 @@ export async function runExpiringContractJob(): Promise<void> {
 
   const expiringContracts = await prisma.supplierContract.findMany({
     where: {
-      status:    'ACTIVE',
+      isActive:  true,
       endDate:   { gte: now, lte: cutoffDate },
       deletedAt: null,
     },
     include: {
       supplier: { select: { id: true, name: true, email: true } },
-      vehicle:  { select: { registration: true, make: true, model: true } },
-      location: { select: { id: true, name: true } },
+      vehicle:  {
+        select: {
+          registrationNo: true,
+          make:           true,
+          model:          true,
+          locationId:     true,
+          location:       { select: { id: true, name: true } },
+        },
+      },
     },
     orderBy: { endDate: 'asc' },
   })
@@ -183,17 +206,18 @@ export async function runExpiringContractJob(): Promise<void> {
     return
   }
 
-  // Group by location
+  // Group by location (sourced from vehicle)
   const locationMap = new Map<string, typeof expiringContracts>()
 
   for (const contract of expiringContracts) {
-    const locId = contract.locationId
+    const locId = contract.vehicle?.locationId
+    if (!locId) continue
     if (!locationMap.has(locId)) locationMap.set(locId, [])
     locationMap.get(locId)!.push(contract)
   }
 
   for (const [locationId, contracts] of locationMap.entries()) {
-    const locationName = contracts[0].location.name
+    const locationName = contracts[0].vehicle?.location?.name ?? locationId
 
     const users = await prisma.user.findMany({
       where: {
@@ -220,11 +244,15 @@ export async function runExpiringContractJob(): Promise<void> {
       )
       const badgeClass = daysLeft <= 7 ? 'badge-red' : 'badge-yellow'
 
+      const vehicleDesc = contract.vehicle
+        ? `${contract.vehicle.registrationNo} — ${contract.vehicle.make} ${contract.vehicle.model}`
+        : 'Unassigned'
+
       return `
         <tr>
-          <td>${contract.ref}</td>
+          <td>${contract.id.slice(-8).toUpperCase()}</td>
           <td>${contract.supplier.name}</td>
-          <td>${contract.vehicle.registration} — ${contract.vehicle.make} ${contract.vehicle.model}</td>
+          <td>${vehicleDesc}</td>
           <td>${contract.endDate!.toISOString().split('T')[0]}</td>
           <td><span class="badge ${badgeClass}">${daysLeft}d left</span></td>
         </tr>`
@@ -242,7 +270,7 @@ export async function runExpiringContractJob(): Promise<void> {
       <table>
         <thead>
           <tr>
-            <th>Contract Ref</th>
+            <th>Contract ID</th>
             <th>Supplier</th>
             <th>Vehicle</th>
             <th>Expiry Date</th>

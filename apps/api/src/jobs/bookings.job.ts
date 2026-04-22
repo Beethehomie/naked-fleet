@@ -30,7 +30,7 @@ export async function runOverdueBookingsJob(): Promise<void> {
     },
     include: {
       customer: { select: { firstName: true, lastName: true, email: true, phone: true } },
-      vehicle:  { select: { registration: true, make: true, model: true } },
+      vehicle:  { select: { registrationNo: true, make: true, model: true } },
       location: { select: { id: true, name: true } },
     },
     orderBy: { endDate: 'asc' },
@@ -82,10 +82,10 @@ export async function runOverdueBookingsJob(): Promise<void> {
 
       return `
         <tr>
-          <td>${b.ref}</td>
+          <td>${b.bookingRef}</td>
           <td>${b.customer.firstName} ${b.customer.lastName}</td>
           <td>${b.customer.phone ?? '—'}</td>
-          <td>${b.vehicle.registration} — ${b.vehicle.make} ${b.vehicle.model}</td>
+          <td>${b.vehicle.registrationNo} — ${b.vehicle.make} ${b.vehicle.model}</td>
           <td>${b.endDate.toISOString().split('T')[0]}</td>
           <td><span class="badge badge-red">${daysOverdue}d overdue</span></td>
         </tr>`
@@ -155,11 +155,11 @@ export async function runUpcomingBookingReminderJob(): Promise<void> {
       customer: { select: { firstName: true, lastName: true, email: true, phone: true } },
       vehicle:  {
         select: {
-          registration: true,
-          make:         true,
-          model:        true,
-          colour:       true,
-          fuelType:     true,
+          registrationNo: true,
+          make:           true,
+          model:          true,
+          color:          true,
+          fuelType:       true,
         },
       },
       location: { select: { id: true, name: true } },
@@ -214,10 +214,10 @@ export async function runUpcomingBookingReminderJob(): Promise<void> {
 
       return `
         <tr>
-          <td>${b.ref}</td>
+          <td>${b.bookingRef}</td>
           <td>${b.customer.firstName} ${b.customer.lastName}</td>
           <td>${b.customer.phone ?? '—'}</td>
-          <td>${b.vehicle.registration} — ${b.vehicle.make} ${b.vehicle.model}</td>
+          <td>${b.vehicle.registrationNo} — ${b.vehicle.make} ${b.vehicle.model}</td>
           <td>${b.startDate.toISOString().split('T')[0]} ${b.startDate.toTimeString().slice(0,5)}</td>
           <td><span class="badge badge-blue">in ${hoursUntil}h</span></td>
         </tr>`

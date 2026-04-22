@@ -486,7 +486,7 @@ export const reportsService = {
 
     // Revenue per vehicle
     const revenueByVehicle = await prisma.payment.groupBy({
-      by:    ['booking'],
+      by:    ['bookingId'],
       where: {
         deletedAt:   null,
         status:      'COMPLETED',

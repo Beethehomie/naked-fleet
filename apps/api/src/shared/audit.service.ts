@@ -5,14 +5,15 @@
 // ============================================================
 
 import { prisma } from '../config/database'
+import { Prisma } from '@prisma/client'
 
 interface AuditEntry {
   userId?:   string
   action:    string   // e.g. 'DEPOSIT_REFUNDED', 'BOOKING_CONFIRMED'
   entity:    string   // table name e.g. 'deposits'
   entityId:  string   // record cuid
-  oldValues?: Record<string, unknown>
-  newValues?: Record<string, unknown>
+  oldValues?: Prisma.InputJsonValue
+  newValues?: Prisma.InputJsonValue
   ipAddress?: string
   userAgent?: string
 }
