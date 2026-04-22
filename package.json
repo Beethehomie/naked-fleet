@@ -1,0 +1,26 @@
+{
+  "name":    "rental-os",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev":         "cd apps/api && npm run dev",
+    "build":       "cd apps/api && npm run build",
+    "db:generate": "prisma generate --schema=prisma/schema.prisma",
+    "db:push":     "prisma db push --schema=prisma/schema.prisma",
+    "db:migrate":  "prisma migrate dev --schema=prisma/schema.prisma",
+    "db:studio":   "prisma studio --schema=prisma/schema.prisma",
+    "db:seed":     "ts-node prisma/seed.ts",
+    "lint":        "cd apps/api && npm run lint"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm":  ">=10.0.0"
+  }
+}

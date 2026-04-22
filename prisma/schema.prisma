@@ -1,0 +1,734 @@
+// ============================================================
+// RENTAL OS — PRISMA SCHEMA
+// Phase 2: Full Database Design
+// Tech Stack: PostgreSQL + Prisma ORM
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum UserRole {
+  OWNER
+  MANAGER
+  AGENT
+  FINANCE
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum CustomerStatus {
+  ACTIVE
+  BLACKLISTED
+  INACTIVE
+}
+
+enum VehicleStatus {
+  AVAILABLE
+  RENTED
+  MAINTENANCE
+  DAMAGED
+  RETIRED
+  RESERVED
+}
+
+enum OwnershipType {
+  OWNED
+  LEASED
+  SUPPLIER
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  ACTIVE       // vehicle checked out
+  COMPLETED    // vehicle returned
+  CANCELLED
+  NO_SHOW
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  BANK_TRANSFER
+  EFT
+}
+
+enum PaymentType {
+  RENTAL_FEE
+  DEPOSIT
+  DAMAGE_CHARGE
+  EXTENSION_FEE
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum DepositStatus {
+  HELD               // Collected and held as liability
+  REFUNDED           // Fully refunded to customer
+  PARTIALLY_REFUNDED // Part refunded, part deducted
+  FORFEITED          // Fully retained due to damage
+  APPLIED            // Applied toward a damage charge
+}
+
+enum RefundStatus {
+  PENDING
+  PROCESSED
+  FAILED
+}
+
+enum InspectionType {
+  CHECK_OUT
+  CHECK_IN
+}
+
+enum DamageSeverity {
+  MINOR
+  MODERATE
+  MAJOR
+  TOTALED
+}
+
+enum ClaimStatus {
+  OPEN
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  SETTLED
+  CLOSED
+}
+
+enum ClaimType {
+  DAMAGE
+  THEFT
+  THIRD_PARTY
+  WINDSCREEN
+}
+
+enum ContractStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum SupplierStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum DocumentType {
+  RENTAL_CONTRACT
+  INSPECTION_REPORT
+  DAMAGE_REPORT
+  INSURANCE_POLICY
+  DRIVER_LICENCE
+  ID_DOCUMENT
+  PROOF_OF_ADDRESS
+  VEHICLE_REGISTRATION
+  ROADWORTHY_CERT
+  OTHER
+}
+
+enum ComplianceItemType {
+  DRIVERS_LICENCE
+  VEHICLE_LICENCE
+  ROADWORTHY
+  INSURANCE_POLICY
+  PDP_PERMIT
+  OPERATOR_PERMIT
+  OTHER
+}
+
+enum ComplianceStatus {
+  VALID
+  EXPIRING_SOON  // Within 30 days of expiry
+  EXPIRED
+  MISSING
+}
+
+// ============================================================
+// LOCATIONS
+// Multi-location support from day one
+// ============================================================
+
+model Location {
+  id        String   @id @default(cuid())
+  name      String
+  address   String
+  city      String
+  country   String   @default("ZA")
+  phone     String?
+  email     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  // Relations
+  users     User[]
+  vehicles  Vehicle[]
+  bookings  Booking[]
+  customers Customer[]
+
+  @@map("locations")
+}
+
+// ============================================================
+// USERS (STAFF)
+// Internal staff accounts only — not customer-facing
+// ============================================================
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  phone        String?
+  role         UserRole   @default(AGENT)
+  status       UserStatus @default(ACTIVE)
+  locationId   String
+  location     Location   @relation(fields: [locationId], references: [id])
+  lastLoginAt  DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  deletedAt    DateTime?
+
+  // Relations
+  bookingsCreated   Booking[]    @relation("BookingCreatedBy")
+  bookingsUpdated   Booking[]    @relation("BookingUpdatedBy")
+  inspections       Inspection[]
+  paymentsProcessed Payment[]
+  refundsProcessed  Refund[]
+  auditLogs         AuditLog[]
+  claimsManaged     Claim[]
+
+  @@map("users")
+}
+
+// ============================================================
+// CUSTOMERS (CRM)
+// People who rent vehicles — separate from staff Users
+// ============================================================
+
+model Customer {
+  id              String         @id @default(cuid())
+  firstName       String
+  lastName        String
+  email           String         @unique
+  phone           String
+  idNumber        String?        // National ID or Passport number
+  driversLicence  String?        // Licence number
+  licenceExpiry   DateTime?
+  licenceCategory String?        // Code B, C, EC, etc.
+  dateOfBirth     DateTime?
+  address         String?
+  city            String?
+  country         String?        @default("ZA")
+  status          CustomerStatus @default(ACTIVE)
+  blacklistReason String?
+  locationId      String
+  location        Location       @relation(fields: [locationId], references: [id])
+  notes           String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  deletedAt       DateTime?
+
+  // Relations
+  bookings        Booking[]
+  documents       Document[]
+  complianceItems ComplianceItem[]
+
+  @@map("customers")
+}
+
+// ============================================================
+// SUPPLIERS
+// External vehicle providers / lessors
+// ============================================================
+
+model Supplier {
+  id          String         @id @default(cuid())
+  name        String
+  contactName String?
+  email       String?
+  phone       String?
+  address     String?
+  status      SupplierStatus @default(ACTIVE)
+  bankName    String?
+  bankAccount String?
+  bankBranch  String?
+  notes       String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  deletedAt   DateTime?
+
+  // Relations
+  vehicles          Vehicle[]
+  supplierContracts SupplierContract[]
+
+  @@map("suppliers")
+}
+
+model SupplierContract {
+  id          String    @id @default(cuid())
+  supplierId  String
+  supplier    Supplier  @relation(fields: [supplierId], references: [id])
+  vehicleId   String?
+  vehicle     Vehicle?  @relation(fields: [vehicleId], references: [id])
+  startDate   DateTime
+  endDate     DateTime?
+  monthlyFee  Decimal   @db.Decimal(10, 2)
+  terms       String?
+  documentUrl String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  @@map("supplier_contracts")
+}
+
+// ============================================================
+// VEHICLES (FLEET)
+// Tracks owned, leased, and supplier vehicles
+// ============================================================
+
+model Vehicle {
+  id                String        @id @default(cuid())
+  registrationNo    String        @unique
+  make              String
+  model             String
+  year              Int
+  color             String
+  vin               String?       @unique
+  engineNo          String?
+  fuelType          String        @default("Petrol")
+  transmission      String        @default("Manual")
+  category          String        // Economy, SUV, Luxury, Minibus, etc.
+  seatingCapacity   Int           @default(5)
+  dailyRate         Decimal       @db.Decimal(10, 2)
+  depositAmount     Decimal       @db.Decimal(10, 2)
+  ownershipType     OwnershipType @default(OWNED)
+  status            VehicleStatus @default(AVAILABLE)
+  mileage           Int           @default(0)
+  locationId        String
+  location          Location      @relation(fields: [locationId], references: [id])
+  supplierId        String?
+  supplier          Supplier?     @relation(fields: [supplierId], references: [id])
+  purchaseDate      DateTime?
+  purchasePrice     Decimal?      @db.Decimal(10, 2)
+  insurancePolicyNo String?
+  notes             String?
+  isActive          Boolean       @default(true)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  deletedAt         DateTime?
+
+  // Relations
+  bookings          Booking[]
+  inspections       Inspection[]
+  vehicleCosts      VehicleCost[]
+  documents         Document[]
+  supplierContracts SupplierContract[]
+  claims            Claim[]
+  complianceItems   ComplianceItem[]
+  insurancePolicies InsurancePolicy[]
+
+  @@map("vehicles")
+}
+
+model VehicleCost {
+  id          String   @id @default(cuid())
+  vehicleId   String
+  vehicle     Vehicle  @relation(fields: [vehicleId], references: [id])
+  description String
+  amount      Decimal  @db.Decimal(10, 2)
+  costDate    DateTime
+  // Categories: Maintenance, Insurance, Licensing, Lease, Fuel, Other
+  category    String
+  receiptUrl  String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  @@map("vehicle_costs")
+}
+
+// ============================================================
+// BOOKINGS
+// Central entity linking customer, vehicle, and all financials
+// ============================================================
+
+model Booking {
+  id                 String        @id @default(cuid())
+  bookingRef         String        @unique // Human-readable: BK-2024-0001
+  customerId         String
+  customer           Customer      @relation(fields: [customerId], references: [id])
+  vehicleId          String
+  vehicle            Vehicle       @relation(fields: [vehicleId], references: [id])
+  locationId         String
+  location           Location      @relation(fields: [locationId], references: [id])
+  status             BookingStatus @default(PENDING)
+  startDate          DateTime
+  endDate            DateTime
+  actualStartDate    DateTime?     // Recorded at check-out
+  actualEndDate      DateTime?     // Recorded at check-in
+  totalDays          Int
+  dailyRate          Decimal       @db.Decimal(10, 2) // Rate locked at booking time
+  rentalAmount       Decimal       @db.Decimal(10, 2) // totalDays * dailyRate
+  depositAmount      Decimal       @db.Decimal(10, 2) // Locked at booking time
+  totalAmount        Decimal       @db.Decimal(10, 2) // rentalAmount + depositAmount
+  amountPaid         Decimal       @db.Decimal(10, 2) @default(0)
+  outstandingBalance Decimal       @db.Decimal(10, 2) @default(0)
+  notes              String?
+  cancellationReason String?
+  createdById        String
+  createdBy          User          @relation("BookingCreatedBy", fields: [createdById], references: [id])
+  updatedById        String?
+  updatedBy          User?         @relation("BookingUpdatedBy", fields: [updatedById], references: [id])
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+  deletedAt          DateTime?
+
+  // Relations
+  payments    Payment[]
+  deposit     Deposit?
+  contract    Contract?
+  inspections Inspection[]
+
+  @@index([customerId])
+  @@index([vehicleId])
+  @@index([status])
+  @@index([startDate, endDate])
+  @@map("bookings")
+}
+
+// ============================================================
+// PAYMENTS
+// All money received for a booking
+// ============================================================
+
+model Payment {
+  id            String        @id @default(cuid())
+  bookingId     String
+  booking       Booking       @relation(fields: [bookingId], references: [id])
+  amount        Decimal       @db.Decimal(10, 2)
+  paymentType   PaymentType
+  paymentMethod PaymentMethod
+  status        PaymentStatus @default(PENDING)
+  reference     String?       // Bank ref, card auth code, etc.
+  notes         String?
+  processedById String
+  processedBy   User          @relation(fields: [processedById], references: [id])
+  paidAt        DateTime      @default(now())
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  deletedAt     DateTime?
+
+  // Relations
+  refund Refund?
+
+  @@index([bookingId])
+  @@map("payments")
+}
+
+// ============================================================
+// DEPOSITS — LIABILITY LEDGER
+// CRITICAL: Deposits are NOT revenue. They are a liability
+// held on behalf of the customer until booking completion.
+// ============================================================
+
+model Deposit {
+  id          String        @id @default(cuid())
+  bookingId   String        @unique // One deposit per booking
+  booking     Booking       @relation(fields: [bookingId], references: [id])
+  amount      Decimal       @db.Decimal(10, 2)
+  status      DepositStatus @default(HELD)
+  heldAt      DateTime      @default(now())
+  releasedAt  DateTime?     // When deposit decision was made
+  notes       String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  deletedAt   DateTime?
+
+  // Relations
+  refunds Refund[]
+
+  @@map("deposits")
+}
+
+// ============================================================
+// REFUNDS
+// Tracks full or partial deposit returns
+// ============================================================
+
+model Refund {
+  id              String        @id @default(cuid())
+  depositId       String
+  deposit         Deposit       @relation(fields: [depositId], references: [id])
+  paymentId       String?       @unique // Original deposit payment
+  payment         Payment?      @relation(fields: [paymentId], references: [id])
+  amount          Decimal       @db.Decimal(10, 2) // Amount refunded to customer
+  status          RefundStatus  @default(PENDING)
+  refundMethod    PaymentMethod
+  reference       String?
+  reason          String?
+  deductionAmount Decimal       @db.Decimal(10, 2) @default(0) // Withheld for damage
+  deductionReason String?
+  processedById   String
+  processedBy     User          @relation(fields: [processedById], references: [id])
+  processedAt     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  deletedAt       DateTime?
+
+  @@map("refunds")
+}
+
+// ============================================================
+// CONTRACTS
+// Rental agreements linked to bookings
+// ============================================================
+
+model Contract {
+  id                String         @id @default(cuid())
+  bookingId         String         @unique
+  booking           Booking        @relation(fields: [bookingId], references: [id])
+  contractRef       String         @unique
+  status            ContractStatus @default(DRAFT)
+  terms             String?
+  documentUrl       String?        // Signed PDF in cloud storage
+  signedAt          DateTime?
+  signedByName      String?
+  signedByIpAddr    String?
+  isDigitallySigned Boolean        @default(false)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  deletedAt         DateTime?
+
+  @@map("contracts")
+}
+
+// ============================================================
+// INSPECTIONS
+// Condition reports at check-out and check-in
+// ============================================================
+
+model Inspection {
+  id                String         @id @default(cuid())
+  bookingId         String
+  booking           Booking        @relation(fields: [bookingId], references: [id])
+  vehicleId         String
+  vehicle           Vehicle        @relation(fields: [vehicleId], references: [id])
+  type              InspectionType
+  mileageAtTime     Int
+  fuelLevel         Int            // Percentage: 0–100
+  conductedById     String
+  conductedBy       User           @relation(fields: [conductedById], references: [id])
+  conductedAt       DateTime       @default(now())
+  hasDamage         Boolean        @default(false)
+  notes             String?
+  customerSignature String?        // URL to signature image
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  deletedAt         DateTime?
+
+  // Relations
+  damageItems DamageItem[]
+  documents   Document[]
+
+  @@index([bookingId])
+  @@index([vehicleId, type])
+  @@map("inspections")
+}
+
+model DamageItem {
+  id            String         @id @default(cuid())
+  inspectionId  String
+  inspection    Inspection     @relation(fields: [inspectionId], references: [id])
+  location      String         // e.g. "Front bumper", "Driver door", "Windscreen"
+  description   String
+  severity      DamageSeverity
+  estimatedCost Decimal?       @db.Decimal(10, 2)
+  actualCost    Decimal?       @db.Decimal(10, 2)
+  photoUrl      String?        // Cloud storage URL
+  isPreExisting Boolean        @default(false) // True = noted at check-out
+  claimId       String?
+  claim         Claim?         @relation(fields: [claimId], references: [id])
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@map("damage_items")
+}
+
+// ============================================================
+// INSURANCE POLICIES
+// Linked to vehicles, referenced by claims
+// ============================================================
+
+model InsurancePolicy {
+  id           String   @id @default(cuid())
+  vehicleId    String
+  vehicle      Vehicle  @relation(fields: [vehicleId], references: [id])
+  provider     String
+  policyNumber String
+  coverType    String   // Comprehensive, Third Party, etc.
+  premium      Decimal  @db.Decimal(10, 2)
+  excess       Decimal  @db.Decimal(10, 2)
+  startDate    DateTime
+  endDate      DateTime
+  documentUrl  String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  deletedAt    DateTime?
+
+  // Relations
+  claims Claim[]
+
+  @@map("insurance_policies")
+}
+
+// ============================================================
+// CLAIMS
+// Damage or insurance claims linked to vehicles/bookings
+// ============================================================
+
+model Claim {
+  id                String           @id @default(cuid())
+  claimRef          String           @unique
+  vehicleId         String
+  vehicle           Vehicle          @relation(fields: [vehicleId], references: [id])
+  bookingId         String?          // Optional — theft may have no booking
+  insurancePolicyId String?
+  insurancePolicy   InsurancePolicy? @relation(fields: [insurancePolicyId], references: [id])
+  type              ClaimType
+  status            ClaimStatus      @default(OPEN)
+  description       String
+  incidentDate      DateTime
+  incidentLocation  String?
+  estimatedCost     Decimal?         @db.Decimal(10, 2)
+  settledAmount     Decimal?         @db.Decimal(10, 2)
+  excessPaid        Decimal?         @db.Decimal(10, 2)
+  managedById       String
+  managedBy         User             @relation(fields: [managedById], references: [id])
+  closedAt          DateTime?
+  notes             String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  deletedAt         DateTime?
+
+  // Relations
+  damageItems DamageItem[]
+  documents   Document[]
+
+  @@index([vehicleId])
+  @@index([status])
+  @@map("claims")
+}
+
+// ============================================================
+// DOCUMENTS
+// Cloud storage references for all file types
+// ============================================================
+
+model Document {
+  id           String       @id @default(cuid())
+  type         DocumentType
+  name         String
+  url          String       // Cloud storage URL (S3, GCS, R2)
+  mimeType     String?
+  sizeBytes    Int?
+  customerId   String?
+  customer     Customer?    @relation(fields: [customerId], references: [id])
+  vehicleId    String?
+  vehicle      Vehicle?     @relation(fields: [vehicleId], references: [id])
+  inspectionId String?
+  inspection   Inspection?  @relation(fields: [inspectionId], references: [id])
+  claimId      String?
+  claim        Claim?       @relation(fields: [claimId], references: [id])
+  uploadedById String?
+  expiryDate   DateTime?
+  notes        String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  deletedAt    DateTime?
+
+  @@map("documents")
+}
+
+// ============================================================
+// COMPLIANCE
+// Tracks expiry of licences, roadworthy certs, insurance, etc.
+// ============================================================
+
+model ComplianceItem {
+  id           String             @id @default(cuid())
+  type         ComplianceItemType
+  status       ComplianceStatus   @default(VALID)
+  entityType   String             // "vehicle", "customer", or "company"
+  vehicleId    String?
+  vehicle      Vehicle?           @relation(fields: [vehicleId], references: [id])
+  customerId   String?
+  customer     Customer?          @relation(fields: [customerId], references: [id])
+  referenceNo  String?
+  issueDate    DateTime?
+  expiryDate   DateTime?
+  issuingBody  String?
+  documentUrl  String?
+  notes        String?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  deletedAt    DateTime?
+
+  @@index([expiryDate])
+  @@index([status])
+  @@map("compliance_items")
+}
+
+// ============================================================
+// AUDIT LOG
+// Immutable record of all system changes
+// ============================================================
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String   // e.g. "BOOKING_CREATED", "DEPOSIT_REFUNDED", "VEHICLE_STATUS_CHANGED"
+  entity    String   // Table name e.g. "bookings"
+  entityId  String   // Record cuid
+  oldValues Json?    // State before change
+  newValues Json?    // State after change
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
