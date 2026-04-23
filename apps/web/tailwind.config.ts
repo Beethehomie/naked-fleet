@@ -49,12 +49,13 @@ const config: Config = {
         ],
       },
       borderRadius: {
-        card: "14px",
+        card: "12px",
       },
       boxShadow: {
-        card:     "0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)",
-        "card-dark": "0 2px 10px rgba(0,0,0,0.6)",
-        modal:    "0 20px 60px rgba(0,0,0,0.4)",
+        card:        "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
+        "card-dark": "0 1px 4px rgba(0,0,0,0.4)",
+        elevated:    "0 4px 20px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04)",
+        modal:       "0 20px 60px rgba(0,0,0,0.4)",
       },
     },
   },

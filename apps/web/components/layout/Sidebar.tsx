@@ -25,17 +25,36 @@ export default function Sidebar() {
   return (
     <aside
       className="fixed left-0 top-0 h-screen w-60 flex flex-col z-40"
-      style={{ backgroundColor: "var(--color-cp)" }}
+      style={{
+        backgroundColor: "var(--color-sidebar)",
+        borderRight: "1px solid var(--color-sidebar-border)",
+      }}
     >
       {/* Logo */}
-      <div className="px-5 py-5 border-b border-white/10">
+      <div
+        className="px-5 py-5"
+        style={{ borderBottom: "1px solid var(--color-sidebar-border)" }}
+      >
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center">
+          <div
+            className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+            style={{ backgroundColor: "var(--color-text-accent)" }}
+          >
             <Car className="w-4 h-4 text-white" strokeWidth={2.5} />
           </div>
           <div>
-            <p className="text-white font-bold text-sm tracking-tight leading-none">Naked Fleet</p>
-            <p className="text-white/50 text-xs leading-none mt-0.5">Fleet Management OS</p>
+            <p
+              className="font-semibold text-sm tracking-tight leading-none"
+              style={{ color: "var(--color-text-primary)" }}
+            >
+              Naked Fleet
+            </p>
+            <p
+              className="text-xs leading-none mt-1"
+              style={{ color: "var(--color-text-secondary)" }}
+            >
+              Fleet Management OS
+            </p>
           </div>
         </div>
       </div>
@@ -48,15 +67,15 @@ export default function Sidebar() {
             <Link
               key={href}
               href={href}
-              className={cn(
-                "nav-item",
-                active && "nav-item-active"
-              )}
+              className={cn("nav-item", active && "nav-item-active")}
             >
               <Icon className="w-4 h-4 flex-shrink-0" />
               <span>{label}</span>
               {active && (
-                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-white" />
+                <div
+                  className="ml-auto w-1.5 h-1.5 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: "var(--color-nav-active-text)" }}
+                />
               )}
             </Link>
           )
@@ -64,7 +83,10 @@ export default function Sidebar() {
       </nav>
 
       {/* Bottom */}
-      <div className="px-3 pb-4 pt-2 border-t border-white/10 space-y-0.5">
+      <div
+        className="px-3 pb-4 pt-3 space-y-0.5"
+        style={{ borderTop: "1px solid var(--color-sidebar-border)" }}
+      >
         <Link href="/settings" className="nav-item">
           <Settings className="w-4 h-4" />
           <span>Settings</span>
@@ -76,7 +98,17 @@ export default function Sidebar() {
               window.location.href = "/login"
             }
           }}
-          className="nav-item w-full text-left hover:!text-red-300 hover:!bg-red-500/10"
+          className="nav-item w-full text-left"
+          style={{ color: "var(--color-nav-text)" }}
+          onMouseEnter={e => {
+            (e.currentTarget as HTMLButtonElement).style.color = "var(--color-negative)"
+            ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
+              "color-mix(in srgb, var(--color-negative) 8%, transparent)"
+          }}
+          onMouseLeave={e => {
+            (e.currentTarget as HTMLButtonElement).style.color = "var(--color-nav-text)"
+            ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"
+          }}
         >
           <LogOut className="w-4 h-4" />
           <span>Sign Out</span>

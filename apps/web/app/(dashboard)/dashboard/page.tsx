@@ -21,10 +21,10 @@ const revenueData = [
 ]
 
 const fleetData = [
-  { name: "Available",   value: 14, color: "#34D399" },
-  { name: "Rented",      value: 8,  color: "#5B9BF8" },
-  { name: "Maintenance", value: 3,  color: "#FBBF24" },
-  { name: "Reserved",    value: 2,  color: "#8899B4" },
+  { name: "Available",   value: 14, color: "#30D158" },
+  { name: "Rented",      value: 8,  color: "#0A84FF" },
+  { name: "Maintenance", value: 3,  color: "#FF9F0A" },
+  { name: "Reserved",    value: 2,  color: "#636366" },
 ]
 
 const recentBookings = [
@@ -107,32 +107,23 @@ export default function DashboardPage() {
               accent: "var(--color-warning)",
             },
           ].map(({ label, value, change, up, icon: Icon, accent }) => (
-            <div
-              key={label}
-              className="stat-card"
-              style={{ borderLeftColor: accent }}
-            >
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="stat-label">{label}</p>
-                  <p className="stat-value mt-1">{value}</p>
-                </div>
+            <div key={label} className="stat-card">
+              <div className="flex items-start justify-between gap-3">
+                <p className="stat-label">{label}</p>
                 <div
                   className="p-2 rounded-lg flex-shrink-0"
-                  style={{ backgroundColor: `${accent}18` }}
+                  style={{ backgroundColor: `color-mix(in srgb, ${accent} 12%, transparent)` }}
                 >
-                  <Icon className="w-5 h-5" style={{ color: accent }} />
+                  <Icon className="w-4 h-4" style={{ color: accent }} />
                 </div>
               </div>
-              <div className="flex items-center gap-1">
+              <p className="stat-value" style={{ color: accent }}>{value}</p>
+              <div className="flex items-center gap-1 mt-1">
                 {up
-                  ? <TrendingUp className="w-3.5 h-3.5" style={{ color: "var(--color-positive)" }} />
-                  : <TrendingDown className="w-3.5 h-3.5" style={{ color: "var(--color-warning)" }} />
+                  ? <TrendingUp  className="w-3 h-3" style={{ color: "var(--color-positive)" }} />
+                  : <TrendingDown className="w-3 h-3" style={{ color: "var(--color-warning)" }} />
                 }
-                <span
-                  className="text-xs font-medium"
-                  style={{ color: up ? "var(--color-positive)" : "var(--color-warning)" }}
-                >
+                <span className="text-xs" style={{ color: up ? "var(--color-positive)" : "var(--color-warning)" }}>
                   {change}
                 </span>
               </div>

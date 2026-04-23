@@ -1,12 +1,11 @@
 "use client"
-import { Bell, Search, Sun, Moon } from "lucide-react"
+import { Bell, Sun, Moon } from "lucide-react"
 import { useEffect, useState } from "react"
 
 function ThemeToggle() {
   const [dark, setDark] = useState(true)
 
   useEffect(() => {
-    // Read saved preference
     const saved = localStorage.getItem("theme")
     const isDark = saved !== "light"
     setDark(isDark)
@@ -23,12 +22,15 @@ function ThemeToggle() {
   return (
     <button
       onClick={toggle}
-      className="p-2 rounded-lg transition-colors hover:bg-black/5 dark:hover:bg-white/8"
+      className="p-2 rounded-lg transition-colors"
+      style={{ color: "var(--color-text-secondary)" }}
+      onMouseEnter={e => (e.currentTarget.style.backgroundColor = "var(--color-card-elevated)")}
+      onMouseLeave={e => (e.currentTarget.style.backgroundColor = "transparent")}
       title={dark ? "Switch to light mode" : "Switch to dark mode"}
     >
       {dark
-        ? <Sun className="w-4 h-4" style={{ color: "var(--color-text-secondary)" }} />
-        : <Moon className="w-4 h-4" style={{ color: "var(--color-text-secondary)" }} />
+        ? <Sun  className="w-4 h-4" />
+        : <Moon className="w-4 h-4" />
       }
     </button>
   )
@@ -37,15 +39,15 @@ function ThemeToggle() {
 export default function TopBar({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <header
-      className="h-14 flex items-center justify-between px-6 sticky top-0 z-30 border-b"
+      className="h-14 flex items-center justify-between px-6 sticky top-0 z-30"
       style={{
-        backgroundColor: "var(--color-card)",
-        borderColor: "var(--color-line)",
-        backdropFilter: "blur(8px)",
+        backgroundColor: "var(--color-sidebar)",
+        borderBottom: "1px solid var(--color-sidebar-border)",
       }}
     >
+      {/* Left: page title */}
       <div>
-        <h1 className="page-title" style={{ fontSize: "1.25rem" }}>{title}</h1>
+        <h1 className="page-title">{title}</h1>
         {subtitle && (
           <p className="text-xs mt-0.5" style={{ color: "var(--color-text-secondary)" }}>
             {subtitle}
@@ -53,27 +55,18 @@ export default function TopBar({ title, subtitle }: { title: string; subtitle?: 
         )}
       </div>
 
-      <div className="flex items-center gap-2">
-        {/* Search */}
-        <div className="relative">
-          <Search
-            className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
-            style={{ color: "var(--color-placeholder)" }}
-          />
-          <input
-            placeholder="Search..."
-            className="input pl-8 pr-3 py-1.5 text-sm w-44 rounded-lg"
-          />
-        </div>
-
-        {/* Dark mode toggle */}
+      {/* Right: actions */}
+      <div className="flex items-center gap-1">
         <ThemeToggle />
 
         {/* Notifications */}
         <button
-          className="relative p-2 rounded-lg transition-colors hover:bg-black/5 dark:hover:bg-white/8"
+          className="relative p-2 rounded-lg transition-colors"
+          style={{ color: "var(--color-text-secondary)" }}
+          onMouseEnter={e => (e.currentTarget.style.backgroundColor = "var(--color-card-elevated)")}
+          onMouseLeave={e => (e.currentTarget.style.backgroundColor = "transparent")}
         >
-          <Bell className="w-4 h-4" style={{ color: "var(--color-text-secondary)" }} />
+          <Bell className="w-4 h-4" />
           <span
             className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full"
             style={{ backgroundColor: "var(--color-negative)" }}
@@ -82,10 +75,10 @@ export default function TopBar({ title, subtitle }: { title: string; subtitle?: 
 
         {/* User avatar */}
         <div
-          className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
-          style={{ backgroundColor: "var(--color-cp-light)" }}
+          className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold text-white flex-shrink-0 ml-1 cursor-pointer"
+          style={{ backgroundColor: "var(--color-text-accent)" }}
         >
-          OW
+          BM
         </div>
       </div>
     </header>
